@@ -1,0 +1,31 @@
+
+一、开发规范：
+
+1.目录规范：
+	a.控制器 controllers 目录：所有管理后台相关的控制器都放在controllers/admin下，前台的直接放在controllers目录下。
+	b.视图 views 目录：所有管理后台相关的视图都放在 views/admin下，而前台则放在views/front下
+	c.资源 assets 目录：用于放置 前后台各自的 css,js,images.
+
+2.文件命名规范：
+	除models及框架要求的插件或类库（如自重写框架类的前缀），其他全部小写，以免linux下出错。具体如下：
+	a.views : 文件名全小写,可带下划线。controllers 文件名全小写且不带下划线。
+	b.models 以"M"为前缀，采用驼峰式命名，如 MAdminLog.php
+	
+3.变量、类、函数名命令规范：
+   a.变量、数组索引、函数名都用小写，可用下划线分隔。
+   b.类名与文件名相同，但采用首字母大写，驼峰式命名，且model类加"M"前缀，如：MAdminLog
+   
+   
+=========================================
+二、常见问题：
+
+1.关于base_url和site_url的区别:
+   见http://www.phpddt.com/php/381.html ，只须记住只有资源文件才用base_url()，其他都用site_url()
+   注：本项目中因使用.htaccess作了url rewrite, 所以配置项 index_page 设为空，导致base_url()与site_url()值一样，
+   但为避免因服务器不支持url rewrite，到时要改麻烦，所以请严格照上规范。
+   
+2.相对路径
+   如在同个controller下，可用自定义函数 relactive_url() 生成相对地址，
+   例如在views/admin/system/main_login.php 中使用 relactive_url('index'), 则其返回值为 admin/main/index，
+   即在同个controller下，可以不用去手动填写前段相同地址,本例中是"admin/main/"
+   
