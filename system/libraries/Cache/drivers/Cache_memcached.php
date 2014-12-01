@@ -29,13 +29,7 @@ class CI_Cache_memcached extends CI_Driver {
 
 	private $_memcached;	// Holds the memcached object
 
-	protected $_memcache_conf 	= array(
-					'default' => array(
-						'default_host'		=> '127.0.0.1',
-						'default_port'		=> 11211,
-						'default_weight'	=> 1
-					)
-				);
+	protected $_memcache_conf 	= NULL;
 
 	// ------------------------------------------------------------------------
 
@@ -149,41 +143,32 @@ class CI_Cache_memcached extends CI_Driver {
 	{
 		// Try to load memcached server info from the config file.
 		$CI =& get_instance();
-		if ($CI->config->load('memcached', TRUE, TRUE))
-		{
-			if (is_array($CI->config->config['memcached']))
-			{
-				$this->_memcache_conf = NULL;
-
-				foreach ($CI->config->config['memcached'] as $name => $conf)
-				{
-					$this->_memcache_conf[$name] = $conf;
-				}
-			}
+		$this->_memcache_conf = $CI->config->item('memcached');
+		
+		if(extension_loaded('memcached')){
+			$this->_memcached = new Memcached();
+		}elseif (extension_loaded('memcache')){
+			$this->_memcached = new Memcache();
+		}else{
+			log_message('error', 'At least one memcache extension need be loaded!');
 		}
-
-		$this->_memcached = new Memcached();
-
+		
 		foreach ($this->_memcache_conf as $name => $cache_server)
 		{
-			if ( ! array_key_exists('hostname', $cache_server))
-			{
-				$cache_server['hostname'] = $this->_default_options['default_host'];
+			if (get_class($this->_memcached) === 'Memcache'){
+				$this->_memcached->addServer(
+					$cache_server['host'],
+					$cache_server['port'],
+					TRUE,
+					$cache_server['weight']
+				);
+			}else{
+				$this->_memcached->addServer(
+					$cache_server['host'], 
+					$cache_server['port'], 
+					$cache_server['weight']
+				);
 			}
-
-			if ( ! array_key_exists('port', $cache_server))
-			{
-				$cache_server['port'] = $this->_default_options['default_port'];
-			}
-	
-			if ( ! array_key_exists('weight', $cache_server))
-			{
-				$cache_server['weight'] = $this->_default_options['default_weight'];
-			}
-	
-			$this->_memcached->addServer(
-					$cache_server['hostname'], $cache_server['port'], $cache_server['weight']
-			);
 		}
 	}
 
@@ -198,7 +183,7 @@ class CI_Cache_memcached extends CI_Driver {
 	 */
 	public function is_supported()
 	{
-		if ( ! extension_loaded('memcached'))
+		if ( ! extension_loaded('memcached') && ! extension_loaded('memcache') )
 		{
 			log_message('error', 'The Memcached Extension must be loaded to use Memcached Cache.');
 			return FALSE;
